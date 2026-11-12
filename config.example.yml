@@ -1,0 +1,67 @@
+# OPTIONAL config file. Every key is optional: anything left out uses the default shown.
+# Without any config file you can simply run:   Rscript run.R --table <id>
+# Copy to config.yml (git-ignored) when you need to change something:
+#   cp config.example.yml config.yml
+
+source:
+  type: api                          # api or csv (--table / --csv on the command line set this)
+  baserow_url: https://api.baserow.io  # change for a self-hosted Baserow (or use --url)
+  table_id: null                     # number after /table/ in the Baserow URL (or use --table)
+  csv_path: null                     # path to a CSV export (or use --csv)
+  # The token is never stored here: it is read from BASEROW_TOKEN (.Renviron).
+
+# ---- who rated -------------------------------------------------------------
+# Column naming convention: <prefix><field>, e.g. R1_Pathology, R2_Pathology, AI_Pathology.
+raters:                              # rater name: column prefix
+  R1: "R1_"
+  R2: "R2_"
+  AI: "AI_"
+human_raters: [R1, R2]               # compared pairwise in round 1 (two or more)
+model_rater: AI                      # compared against the reference in round 2 (null = none)
+
+# ---- what to compare -------------------------------------------------------
+# auto = every field that has a column for every rater above. Types come from Baserow:
+#   multiple select / link -> set; single select / text / boolean / date -> category;
+#   number / rating -> numeric; long text and files are skipped.
+fields: auto
+# Or list them yourself:
+# fields:
+#   Pathology:           {type: set}
+#   Age: {type: numeric, tolerance: 0}
+
+exclude_fields: []                   # field names (without prefix) to leave out of "auto"
+
+field_settings: {}                   # extra per-field options, added to auto or listed fields:
+#  Age: {tolerance: 1, empty_as: 0}
+#                                    #   tolerance: numbers within this distance match
+#                                    #   empty_as: value used when a rater left the cell empty
+
+# ---- units -----------------------------------------------------------------
+units:
+  experiment_id: id                  # one row = one unit; "id" is Baserow's row id
+  paper_id: auto                     # column grouping rows into papers. auto = first link-to-table
+                                     #   column; null = no grouping (row level only)
+  paper_id_pattern: null             # optional regex, capture group 1 = paper id
+                                     #   e.g. paper_id: Name with paper_id_pattern: "Paper\\s*(\\d+)"
+levels: [experiment, paper]
+
+# ---- optional workflow columns ---------------------------------------------
+# row_filter:                        # compare only rows every human marked as one of `keep`
+#   field: Row Status                # per-human column: R1_Row Status, R2_Row Status
+#   keep: [Valid experiment]
+#   compare: true                    # also report human agreement on this column
+# completion:                        # round 2 refuses to run until every kept row is done
+#   field: Status
+#   done: [Complete]
+
+# ---- scoring ---------------------------------------------------------------
+reference: intersection              # round 2 reference: intersection / union / a rater name
+empty_both: NA                       # value when a denominator is 0 (e.g. both empty): NA or 1
+unknown_as_empty: false              # true = treat unknown_values as "no answer"
+unknown_values: [Unknown]
+synonyms: null                       # CSV with columns raw,standard (see synonyms.example.csv)
+multi_value_sep: ","                 # separator inside multi-value cells
+text_as: category                    # category: a text cell is one value
+                                     # set: a text cell like "a, b" is split into a list
+
+output_dir: output

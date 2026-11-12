@@ -1,0 +1,26 @@
+# Secrets
+.Renviron
+.env
+*.token
+
+# Real data and outputs (never commit)
+data/
+output/
+cache/
+*.rds
+*.RData
+.Rhistory
+
+# R / OS clutter
+.Rproj.user/
+.DS_Store
+
+# Local config
+config.yml
+synonyms.csv
+
+# Built website
+site/
+
+# Personal settings files (kept on this computer only)
+my_settings/
