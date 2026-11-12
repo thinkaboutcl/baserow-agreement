@@ -13,12 +13,19 @@ summarise_metrics <- function(metrics, cfg) {
     dplyr::group_by(level, comparison, field) |>
     dplyr::group_modify(~ agg(.x)) |>
     dplyr::ungroup()
-  # Pool all configured fields (the row-status field is reported separately).
-  all_fields <- metrics |>
+  # "(all fields)" is the plain average of the field rows, so every field counts
+  # the same. The row-status field is reported on its own and left out here.
+  mean_or_na <- function(x) if (all(is.na(x))) NA_real_ else mean(x, na.rm = TRUE)
+  all_fields <- by_field |>
     dplyr::filter(field %in% names(cfg$fields)) |>
     dplyr::group_by(level, comparison) |>
-    dplyr::group_modify(~ agg(.x)) |>
-    dplyr::ungroup() |>
+    dplyr::summarise(
+      n_units = sum(n_units),
+      n_scored = sum(n_scored),
+      dplyr::across(c(jaccard_macro, jaccard_micro, precision_macro, precision_micro,
+                      recall_macro, recall_micro), mean_or_na),
+      .groups = "drop"
+    ) |>
     dplyr::mutate(field = "(all fields)")
   dplyr::bind_rows(by_field, all_fields) |>
     dplyr::arrange(level, comparison, field == "(all fields)", field)

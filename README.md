@@ -294,6 +294,9 @@ There are two ways to average:
 * Macro: score each item, then take the mean.
 * Micro: add up the counts from all items, then score once.
 
+The `(all fields)` row is the plain average of the field rows above it.
+Every field counts the same.
+
 ## Tests
 
 ```bash
