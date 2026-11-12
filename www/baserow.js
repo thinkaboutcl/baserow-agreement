@@ -62,3 +62,38 @@ async function baserowFetchTable(msg) {
 $(document).on("shiny:connected", function () {
   Shiny.addCustomMessageHandler("baserow_fetch", baserowFetchTable);
 });
+
+// Download buttons.
+// Shiny opens downloads in a new tab. In the browser-only version of the app the
+// new tab cannot reach R, so the file never arrives. Instead, fetch the file
+// from this page and save it directly.
+$(document).on("click", "a.shiny-download-link", async function (event) {
+  const href = this.getAttribute("href");
+  if (!href) return;
+  event.preventDefault();
+  const button = this;
+  button.classList.add("disabled");
+  try {
+    const res = await fetch(href);
+    if (!res.ok) {
+      throw new Error(res.status >= 500 ? "Please click Run first, then try again." : "HTTP " + res.status);
+    }
+    const blob = await res.blob();
+    let name = "download";
+    const cd = res.headers.get("content-disposition") || "";
+    const match = cd.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i);
+    if (match) name = decodeURIComponent(match[1]);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  } catch (err) {
+    alert("The download did not work. " + err.message);
+  } finally {
+    button.classList.remove("disabled");
+  }
+});

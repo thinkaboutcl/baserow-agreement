@@ -590,6 +590,10 @@ server <- function(input, output, session) {
       zip::zip(file, files = list.files(dir, recursive = TRUE), root = dir)
     }
   )
+
+  # Make the download links ready even on tabs that are not open yet.
+  outputOptions(output, "download", suspendWhenHidden = FALSE)
+  outputOptions(output, "download_settings", suspendWhenHidden = FALSE)
 }
 
 shinyApp(ui, server)
